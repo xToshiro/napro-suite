@@ -134,16 +134,17 @@ class BackendServer:
         return [p.device for p in serial.tools.list_ports.comports()]
 
     def init_csv(self):
-        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        ts = datetime.now().strftime('%Y-%m-%d_%H-%M')
         with self.csv_lock:
             self.csv_handle = open(os.path.join(DATA_DIR, f"serial_raw_log_{ts}.csv"), "w", newline='', encoding='utf-8')
             self.csv_writer = csv.writer(self.csv_handle)
-            self.csv_writer.writerow(["Data e Hora", "Direção", "Hex", "ASCII", "Nota"])
+            self.csv_writer.writerow(["dateTime", "Direção", "Hex", "ASCII", "Nota"])
             self.csv_handle.flush()
 
             self.pol_handle = open(os.path.join(DATA_DIR, f"pollutants_{ts}.csv"), "w", newline='', encoding='utf-8')
             self.pol_writer = csv.writer(self.pol_handle, delimiter=';')
-            self.pol_writer.writerow(["DataHora", "CO_%", "CO2_%", "HC_ppm", "O2_%", "NOx_ppm", "RPM", "Temp_C"])
+            self.pol_writer.writerow(["dateTime", "CO_%", "CO2_%", "HC_ppm", "O2_%", "NOx_ppm", "RPM", "Temp_C"])
+
             self.pol_handle.flush()
 
     def close_csv(self):
@@ -281,13 +282,15 @@ class BackendServer:
                     except serial.SerialTimeoutException:
                         pass # previne deadlock no write se o outro lado congelou (ex: cabo solto ou simulador lento)
                     
-                    timestamp = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+                    now = datetime.now()
+                    timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+                    csv_stamp = now.strftime('%Y-%m-%d_%H-%M')
                     hex_data = ' '.join([f'{b:02X}' for b in d])
                     note = self.decode_state(hex_data)
 
                     with self.csv_lock:
                         if self.csv_writer:
-                            self.csv_writer.writerow([timestamp, dir, hex_data, "", note])
+                            self.csv_writer.writerow([csv_stamp, dir, hex_data, "", note])
                             self.csv_handle.flush()
 
                     decoded_pkts = []
@@ -304,18 +307,19 @@ class BackendServer:
                                 pkt = self.buffer_eqp[:46]
                                 rec = self.extract_packet_data(pkt, timestamp)
                                 if rec:
+                                    rec["CSV_Time"] = csv_stamp
                                     decoded_pkts.append(rec)
                                     with self.csv_lock:
                                         if self.pol_writer:
                                             self.pol_writer.writerow([
-                                                rec["Time"],
-                                                str(rec["CO"]).replace('.', ','),
-                                                str(rec["CO2"]).replace('.', ','),
-                                                str(rec["HC"]).replace('.', ','),
-                                                str(rec["O2"]).replace('.', ','),
-                                                str(rec["NOx"]).replace('.', ','),
-                                                str(rec["RPM"]).replace('.', ','),
-                                                str(rec["Temp"]).replace('.', ',')
+                                                rec["CSV_Time"],
+                                                str(rec["CO"]),
+                                                str(rec["CO2"]),
+                                                str(rec["HC"]),
+                                                str(rec["O2"]),
+                                                str(rec["NOx"]),
+                                                str(rec["RPM"]),
+                                                str(rec["Temp"])
                                             ])
                                             self.pol_handle.flush()
                                 self.buffer_eqp = self.buffer_eqp[46:]

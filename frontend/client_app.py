@@ -329,7 +329,7 @@ class ClientApp:
                             packet_time_str = rec.get("Time")
                             if packet_time_str:
                                 try:
-                                    pt = datetime.strptime(packet_time_str, '%H:%M:%S.%f')
+                                    pt = datetime.strptime(packet_time_str, '%Y-%m-%d %H:%M:%S.%f')
                                     if self.last_packet_time:
                                         delta = (pt - self.last_packet_time).total_seconds()
                                         if delta < 0: delta += 86400 # correção do midnight rollover
@@ -406,22 +406,22 @@ class ClientApp:
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
             
-        dest = os.path.join(dest_dir, f"captura_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
+        dest = os.path.join(dest_dir, f"captura_{datetime.now().strftime('%Y-%m-%d_%H-%M')}.csv")
         
         try:
             with open(dest, "w", newline='', encoding='utf-8') as f:
                 writer = csv.writer(f, delimiter=';')
-                writer.writerow(["DataHora", "CO_%", "CO2_%", "HC_ppm", "O2_%", "NOx_ppm", "RPM", "Temp_C"])
+                writer.writerow(["dateTime", "CO_%", "CO2_%", "HC_ppm", "O2_%", "NOx_ppm", "RPM", "Temp_C"])
                 for rec in self.history:
                     writer.writerow([
-                        rec.get("Time"),
-                        str(rec.get("CO", 0)).replace('.', ','),
-                        str(rec.get("CO2", 0)).replace('.', ','),
-                        str(rec.get("HC", 0)).replace('.', ','),
-                        str(rec.get("O2", 0)).replace('.', ','),
-                        str(rec.get("NOx", 0)).replace('.', ','),
-                        str(rec.get("RPM", 0)).replace('.', ','),
-                        str(rec.get("Temp", 0)).replace('.', ',')
+                        rec.get("CSV_Time", rec.get("Time")),
+                        str(rec.get("CO", 0)),
+                        str(rec.get("CO2", 0)),
+                        str(rec.get("HC", 0)),
+                        str(rec.get("O2", 0)),
+                        str(rec.get("NOx", 0)),
+                        str(rec.get("RPM", 0)),
+                        str(rec.get("Temp", 0))
                     ])
                     
             # --- LIMPEZA DE CACHE E MEMÓRIA ---
