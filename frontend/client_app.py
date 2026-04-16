@@ -406,7 +406,7 @@ class ClientApp:
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
             
-        dest = os.path.join(dest_dir, f"captura_{datetime.now().strftime('%Y-%m-%d_%H-%M')}.csv")
+        dest = os.path.join(dest_dir, f"captura_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv")
         
         try:
             with open(dest, "w", newline='', encoding='utf-8') as f:

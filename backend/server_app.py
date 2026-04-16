@@ -134,7 +134,7 @@ class BackendServer:
         return [p.device for p in serial.tools.list_ports.comports()]
 
     def init_csv(self):
-        ts = datetime.now().strftime('%Y-%m-%d_%H-%M')
+        ts = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         with self.csv_lock:
             self.csv_handle = open(os.path.join(DATA_DIR, f"serial_raw_log_{ts}.csv"), "w", newline='', encoding='utf-8')
             self.csv_writer = csv.writer(self.csv_handle)
@@ -284,7 +284,7 @@ class BackendServer:
                     
                     now = datetime.now()
                     timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-                    csv_stamp = now.strftime('%Y-%m-%d_%H-%M')
+                    csv_stamp = now.strftime('%Y-%m-%dT%H:%M:%S')
                     hex_data = ' '.join([f'{b:02X}' for b in d])
                     note = self.decode_state(hex_data)
 
